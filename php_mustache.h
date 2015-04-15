@@ -17,6 +17,12 @@
 #define PHP_MUSTACHE_THROW_EXCEPTIONS 0
 #endif
 
+#if PHP_API_VERSION >= 20131218
+#  define PHP7_MUSTACHE_DUPLICATE
+#else
+#  define PHP7_MUSTACHE_DUPLICATE , 1
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

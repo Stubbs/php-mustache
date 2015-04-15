@@ -122,8 +122,26 @@ void mustache_exception_handler(TSRMLS_D)
   try {
     throw;
   } catch( mustache::TokenizerException& e ) {
-    zval * exception = zend_throw_exception_ex(MustacheParserException_ce_ptr, 
+    zval * exception;
+#if PHP_API_VERSION < 20131218
+    exception = zend_throw_exception_ex(MustacheParserException_ce_ptr, 
             0 TSRMLS_CC, (char *) e.what(), "MustacheParserException");
+#else
+    zval ex;
+    zend_object * obj = zend_throw_exception_ex(MustacheParserException_ce_ptr, 
+            0 TSRMLS_CC, (char *) e.what(), "MustacheParserException");
+    ZVAL_OBJ(&ex, obj);
+    exception = &ex;
+/*
+	zend_update_property_long(base_exception_ce, &ex, "severity", sizeof("severity")-1, severity);
+	return obj;
+    zval exception;
+    zend_object * exceptionobj = zend_throw_exception_ex(MustacheParserException_ce_ptr, 
+            0 TSRMLS_CC, (char *) e.what(), "MustacheParserException");
+    zval * exception = Z_OBJ_P(exceptionobj);
+*/
+#endif
+	
     zend_update_property_long(MustacheParserException_ce_ptr, exception, 
             (char *) "templateLineNo", strlen("templateLineNo"), e.lineNo TSRMLS_CC);
     zend_update_property_long(MustacheParserException_ce_ptr, exception, 

@@ -94,7 +94,7 @@ void mustache_node_to_zval(mustache::Node * node, zval * current TSRMLS_DC)
   add_assoc_long(current, "type", node->type);
   add_assoc_long(current, "flags", node->flags);
   if( NULL != node->data && node->data->length() > 0 ) {
-    add_assoc_stringl(current, "data", (char *) node->data->c_str(), node->data->length(), 1);
+    add_assoc_stringl(current, "data", (char *) node->data->c_str(), node->data->length() PHP7_MUSTACHE_DUPLICATE);
   }
   
   // Children
@@ -355,8 +355,9 @@ PHP_METHOD(MustacheAST, __toString)
     int len = 0;
     mustache_node_to_binary_string(payload->node, &str, &len);
     
-    if( str != NULL && len > 0 ) {
-      RETURN_STRINGL(str, len, 0);
+    if( str != NULL ) {
+      RETVAL_STRINGL(str, len PHP7_MUSTACHE_DUPLICATE);
+      efree(str);
     }
     
   } catch(...) {
@@ -404,7 +405,9 @@ PHP_METHOD(MustacheAST, __wakeup)
       while( zend_hash_get_current_data_ex(data_hash, (void**) &data_entry, &data_pointer) == SUCCESS ) {
         if( zend_hash_get_current_key_ex(data_hash, &key_str, &key_len, 
                 &key_nindex, false, &data_pointer) == HASH_KEY_IS_STRING ) {
-#if PHP_API_VERSION >= 20100412
+#if PHP_API_VERSION >= 20131218
+          // @todo Ignore for now
+#elif PHP_API_VERSION >= 20100412
           zend_unmangle_property_name(key_str, key_len-1, (const char **) &class_name, (const char **) &prop_name);
 #else
           zend_unmangle_property_name(key_str, key_len-1, &class_name, &prop_name);
